@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Operação Realizada!{% endblock %}
+
+{% block content %}
+<div class="alert alert-success text-center" role="alert">
+    <h4 class="alert-heading">Operação realizada com sucesso!</h4>
+    <p>A máquina foi acionada. Você pode fechar esta página.</p>
+    <hr>
+    <p class="mb-0">Seu novo saldo é de <strong>{{ creditos }}</strong> crédito(s).</p>
+</div>
+
+<div class="text-center">
+    <a href="{% url 'laundry:home' identificador_inquilino %}" class="btn btn-secondary">Voltar ao Painel</a>
+</div>
+{% endblock %}

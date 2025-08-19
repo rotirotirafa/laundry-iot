@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel de Controle{% endblock %}
+
+{% block content %}
+<div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+    <span>Bem-vindo, <strong>{{ inquilino.identificador }}</strong>!</span>
+    <span class="badge bg-primary rounded-pill">Você tem {{ inquilino.creditos }} crédito(s)</span>
+</div>
+
+<h2 class="mb-4">Máquinas Disponíveis</h2>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="row">
+    {% for maquina in maquinas %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ maquina.nome }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text"><strong>Tipo:</strong> {{ maquina.get_tipo_display }}</p>
+                <p class="card-text">
+                    <strong>Status:</strong>
+                    {% if maquina.status == 'DISPONIVEL' %}
+                        <span class="badge bg-success">Disponível</span>
+                    {% elif maquina.status == 'EM_USO' %}
+                        <span class="badge bg-warning">Em Uso</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Em Manutenção</span>
+                    {% endif %}
+                </p>
+
+                {% if maquina.status == 'DISPONIVEL' and inquilino.creditos > 0 %}
+                    <a href="{% url 'laundry:usar_maquina' inquilino.identificador maquina.id %}" class="btn btn-primary">Usar Máquina</a>
+                {% else %}
+                    <button class="btn btn-primary" disabled>Usar Máquina</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
