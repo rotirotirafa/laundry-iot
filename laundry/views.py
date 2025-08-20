@@ -11,7 +11,7 @@ def ligar_tomada(device_id, ip, local_key):
     Esta é uma implementação mock. Você deve substituí-la pela lógica real
     usando a biblioteca tinytuya.
     """
-    print(f"[SIMULAÇÃO] Ligando a tomada...\n  Device ID: {device_id}\n  IP: {ip}\n  Local Key: {local_key}")
+    # print(f"[SIMULAÇÃO] Ligando a tomada...\n  Device ID: {device_id}\n  IP: {ip}\n  Local Key: {local_key}")
     # Exemplo com tinytuya (descomente e ajuste conforme necessário):
     # import tinytuya
     # d = tinytuya.OutletDevice(device_id, ip, local_key)
