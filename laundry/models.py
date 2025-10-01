@@ -17,6 +17,10 @@ class Maquina(models.Model):
     device_id = models.CharField(max_length=100)
     local_key = models.CharField(max_length=100)
     status = models.CharField(max_length=10, choices=StatusMaquina.choices, default=StatusMaquina.DISPONIVEL)
+    tempo_ciclo_minutos = models.PositiveIntegerField(
+        default=70,
+        help_text="Tempo de duração do ciclo em minutos. Este valor será usado para programar o timer do dispositivo Tasmota."
+    )
 
     def __str__(self):
         return f"{self.nome} ({self.get_tipo_display()})"
@@ -32,7 +36,8 @@ class Inquilino(models.Model):
 class HistoricoUso(models.Model):
     inquilino = models.ForeignKey(Inquilino, on_delete=models.CASCADE, related_name='usos')
     maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='historico')
-    data_hora = models.DateTimeField(auto_now_add=True)
+    data_hora_inicio = models.DateTimeField(auto_now_add=True)
+    data_hora_fim = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Uso por {self.inquilino} em {self.data_hora.strftime('%d/%m/%Y %H:%M')}"
+        return f"Uso por {self.inquilino} em {self.data_hora_inicio.strftime('%d/%m/%Y %H:%M')}"

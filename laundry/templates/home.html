@@ -36,8 +36,6 @@
 
                 {% if maquina.status == 'DISPONIVEL' and inquilino.creditos > 0 %}
 <a href="{% url 'laundry:usar_maquina' id_maquina=maquina.id identificador_inquilino=inquilino.identificador %}" class="btn btn-success">Usar</a>
-                {% else %}
-                    <button class="btn btn-primary" disabled>Usar Máquina</button>
                 {% endif %}
             </div>
         </div>

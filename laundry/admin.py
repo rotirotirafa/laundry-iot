@@ -16,7 +16,7 @@ class InquilinoAdmin(admin.ModelAdmin):
 
 @admin.register(HistoricoUso)
 class HistoricoUsoAdmin(admin.ModelAdmin):
-    list_display = ('inquilino', 'maquina', 'data_hora')
-    list_filter = ('maquina', 'inquilino', 'data_hora')
+    list_display = ('inquilino', 'maquina', 'data_hora_inicio', 'data_hora_fim')
+    list_filter = ('maquina', 'inquilino', 'data_hora_inicio')
     search_fields = ('inquilino__identificador', 'maquina__nome')
-    readonly_fields = ('data_hora',)
+    readonly_fields = ('data_hora_inicio', 'data_hora_fim')

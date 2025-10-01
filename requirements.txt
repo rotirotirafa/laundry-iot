@@ -1,4 +1,2 @@
-django
-psycopg2-binary
-tinytuya
-python-dotenv
+Django>=5.0
+django-q>=1.5
