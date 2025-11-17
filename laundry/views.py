@@ -1,133 +1,134 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from .models import Maquina, Inquilino, HistoricoUso
+from django.contrib import messages
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
+from .models import Inquilino, Maquina, HistoricoUso
 from .services import TasmotaService
-from django.db import transaction # Importa o módulo de transação
-from django.contrib import messages # Para mensagens de erro mais elegantes
 
 def landing_page_view(request):
-    """
-    Renderiza a página de aterrissagem principal da aplicação.
-    """
     return render(request, 'landing.html')
 
 def login_view(request):
     if request.method == 'POST':
-        identificador = request.POST.get('identificador')
+        apto = request.POST.get('apartamento')
+        raw_password = request.POST.get('password')
+
+        if not apto or not raw_password:
+            messages.error(request, 'Apartamento e senha são obrigatórios.')
+            return redirect('laundry:login')
+
         try:
-            inquilino = Inquilino.objects.get(identificador=identificador)
-            # Redireciona para a home, passando o identificador na URL
-            return redirect('laundry:home', identificador_inquilino=inquilino.identificador)
+            inquilino = Inquilino.objects.get(apartamento=apto)
+            
+            if not inquilino.password:
+                inquilino.set_password(raw_password)
+                inquilino.save()
+                messages.success(request, 'Sua nova senha foi definida com sucesso!')
+                request.session['inquilino_id'] = inquilino.id
+                return redirect('laundry:home')
+
+            if inquilino.check_password(raw_password):
+                request.session['inquilino_id'] = inquilino.id
+                return redirect('laundry:home')
+            else:
+                messages.error(request, 'Apartamento ou senha inválidos.')
+                return redirect('laundry:login')
+
         except Inquilino.DoesNotExist:
-            return render(request, 'login.html', {'error': 'Inquilino não encontrado.'})
+            messages.error(request, 'Apartamento não encontrado.')
+            return redirect('laundry:login')
+
     return render(request, 'login.html')
 
-def home_view(request, identificador_inquilino):
-    # --- Lógica de Verificação de Máquinas Expiradas (Fail-safe) ---
-    # Esta lógica é uma segurança extra caso o Tasmota falhe em desligar.
-    now = timezone.now()
-    usos_expirados = HistoricoUso.objects.filter(
-        maquina__status=Maquina.StatusMaquina.EM_USO,
-        data_hora_fim__lte=now
-    )
-    for uso in usos_expirados:
-        maquina = uso.maquina
-        maquina.status = Maquina.StatusMaquina.DISPONIVEL
-        maquina.save()
+def home_view(request):
+    inquilino_id = request.session.get('inquilino_id')
+    if not inquilino_id:
+        return redirect('laundry:login')
+    
+    maquinas_list = Maquina.objects.all().order_by('nome')
+    for maquina in maquinas_list:
+        if maquina.status == Maquina.StatusMaquina.EM_USO:
+            ultimo_uso = maquina.historicouso_set.order_by('-data_hora_fim').first()
+            if ultimo_uso and ultimo_uso.data_hora_fim <= timezone.now():
+                maquina.status = Maquina.StatusMaquina.DISPONIVEL
+                maquina.save()
 
-    # --- Renderização da Página ---
-    inquilino = get_object_or_404(Inquilino, identificador=identificador_inquilino)
-    maquinas = Maquina.objects.all().order_by('nome')
     context = {
-        'inquilino': inquilino,
-        'maquinas': maquinas,
+        'inquilino': get_object_or_404(Inquilino, pk=inquilino_id),
+        'maquinas': maquinas_list
     }
-    return render(request, 'home.html', context)
+    return render(request, 'home.html')
 
-def usar_maquina_view(request, identificador_inquilino, id_maquina):
-    inquilino = get_object_or_404(Inquilino, identificador=identificador_inquilino)
+def usar_maquina_view(request, maquina_id):
+    inquilino_id = request.session.get('inquilino_id')
+    if not inquilino_id:
+        return redirect('laundry:login')
 
-    # Validação inicial de créditos, ANTES de qualquer outra coisa.
-    if inquilino.creditos <= 0:
-        messages.error(request, "Você não tem créditos suficientes para usar a máquina.")
-        return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+    tasmota_service = TasmotaService()
 
     try:
-        # Inicia uma transação atômica para garantir a consistência dos dados.
         with transaction.atomic():
-            # Busca e bloqueia a linha da máquina no banco de dados.
-            # Nenhuma outra requisição pode modificar esta máquina até a transação terminar.
-            maquina = Maquina.objects.select_for_update().get(pk=id_maquina)
+            maquina = Maquina.objects.select_for_update().get(pk=maquina_id)
+            inquilino = Inquilino.objects.select_for_update().get(pk=inquilino_id)
 
-            # Validação CRÍTICA do status da máquina DENTRO da transação
+            if maquina.status == Maquina.StatusMaquina.EM_USO:
+                ultimo_uso = maquina.historicouso_set.order_by('-data_hora_fim').first()
+                if ultimo_uso and ultimo_uso.data_hora_fim <= timezone.now():
+                    maquina.status = Maquina.StatusMaquina.DISPONIVEL
+
             if maquina.status != Maquina.StatusMaquina.DISPONIVEL:
-                messages.error(request, "Esta máquina não está mais disponível. Outra pessoa pode ter iniciado o uso.")
-                return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+                messages.error(request, 'Máquina não está disponível.')
+                return redirect('laundry:home')
 
-            # Camada extra de segurança: Verificação do status real no dispositivo
-            tasmota_service = TasmotaService()
-            status_real = tasmota_service.verificar_status_dispositivo(maquina.ip_tomada)
-
-            if status_real == "ON":
-                # Se o dispositivo já está ligado, algo está fora de sincronia.
-                # Força a atualização do nosso banco de dados para refletir a realidade e avisa o usuário.
-                maquina.status = Maquina.StatusMaquina.EM_USO
-                maquina.save() # Salva a sincronização
-                messages.warning(request, "A máquina já se encontrava em uso. O status no painel foi corrigido.")
-                return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+            if inquilino.creditos < maquina.custo_creditos:
+                messages.error(request, 'Créditos insuficientes.')
+                return redirect('laundry:home')
             
-            if status_real == "ERRO":
-                messages.error(request, "Falha de comunicação com a máquina. Não foi possível verificar o status atual.")
-                return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+            tempo_ciclo = maquina.tempo_minutos
+            if not tempo_ciclo or tempo_ciclo <= 0:
+                messages.error(request, f"Erro crítico: A máquina '{maquina.nome}' está configurada com tempo de ciclo inválido. Contate o suporte.")
+                return redirect('laundry:home')
 
-            # Se chegamos aqui, a máquina está DISPONÍVEL no DB e DESLIGADA no mundo real.
-            # Agora podemos prosseguir com a ativação.
+            sucesso_tasmota = tasmota_service.ligar_com_timer(maquina.ip_address, tempo_ciclo)
 
-            # Ação Principal: Envia o comando para o dispositivo
-            sucesso_comunicacao = tasmota_service.ligar_com_timer(
-                ip_address=maquina.ip_tomada,
-                tempo_minutos=maquina.tempo_ciclo_minutos
-            )
+            if not sucesso_tasmota:
+                messages.error(request, f"Falha na comunicação com a máquina '{maquina.nome}'. Tente novamente.")
+                return redirect('laundry:home')
 
-            if not sucesso_comunicacao:
-                messages.error(request, "Falha de comunicação ao tentar ligar a máquina. Tente novamente.")
-                # A transação será revertida, nenhuma mudança no DB será feita.
-                return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+            inquilino.creditos -= maquina.custo_creditos
+            inquilino.save()
 
-            # --- SUCESSO! ATUALIZA O ESTADO DO SISTEMA ---
-
-            # 1. Debita o crédito do inquilino
-            inquilino.creditos -= 1
-            inquilino.save() # Salva a mudança de créditos
-
-            # 2. Altera o status da máquina para "Em Uso"
             maquina.status = Maquina.StatusMaquina.EM_USO
-            maquina.save() # <<-- CORREÇÃO CRÍTICA PARA PERSISTIR O ESTADO
+            maquina.save()
 
-            # 3. Cria um registro do uso
-            hora_fim = timezone.now() + timedelta(minutes=maquina.tempo_ciclo_minutos)
+            data_hora_fim = timezone.now() + timedelta(minutes=tempo_ciclo)
             HistoricoUso.objects.create(
-                inquilino=inquilino, 
                 maquina=maquina,
-                data_hora_fim=hora_fim
+                inquilino=inquilino,
+                data_hora_fim=data_hora_fim,
+                custo_creditos=maquina.custo_creditos
             )
 
-            # Se tudo deu certo, a transação é concluída (commit) automaticamente ao sair do 'with'.
+            messages.success(request, f"Máquina '{maquina.nome}' iniciada com sucesso!")
+            return redirect('laundry:sucesso')
 
     except Maquina.DoesNotExist:
         messages.error(request, "Máquina não encontrada.")
-        return redirect('laundry:home', identificador_inquilino=identificador_inquilino)
+        return redirect('laundry:home')
+    except Inquilino.DoesNotExist:
+        messages.error(request, "Inquilino não encontrado.")
+        return redirect('laundry:login')
+    except Exception as e:
+        messages.error(request, f"Ocorreu um erro inesperado: {e}")
+        return redirect('laundry:home')
 
-    # Redireciona para a página de sucesso se a transação foi bem-sucedida
-    return redirect('laundry:sucesso', identificador_inquilino=inquilino.identificador)
-
-
-def sucesso_view(request, identificador_inquilino):
-    inquilino = get_object_or_404(Inquilino, identificador=identificador_inquilino)
+def sucesso_view(request):
+    inquilino_id = request.session.get('inquilino_id')
+    if not inquilino_id:
+        return redirect('laundry:login')
+    
     context = {
-        'creditos': inquilino.creditos,
-        'identificador_inquilino': inquilino.identificador
+        'inquilino': get_object_or_404(Inquilino, pk=inquilino_id)
     }
     return render(request, 'sucesso.html', context)

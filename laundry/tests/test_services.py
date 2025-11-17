@@ -1,0 +1,126 @@
+
+import requests
+from unittest.mock import patch, Mock
+from django.test import TestCase
+from urllib.parse import quote
+
+from ..services import TasmotaService
+
+class TasmotaServiceTest(TestCase):
+    """
+    Suíte de testes para o TasmotaService.
+    Estes testes usam 'unittest.mock.patch' para simular as requisições HTTP,
+    isolando o serviço da necessidade de uma rede ou dispositivo real.
+    """
+
+    def setUp(self):
+        """Configura uma instância do serviço para ser usada em cada teste."""
+        self.service = TasmotaService()
+        self.ip_address = "192.168.1.100"
+
+    @patch('laundry.services.requests.get')
+    def test_ligar_com_timer_sucesso(self, mock_get):
+        """
+        Testa o caminho feliz: a comunicação é bem-sucedida e o dispositivo
+        retorna a resposta esperada.
+        """
+        # Configuração do Mock para simular uma resposta HTTP bem-sucedida
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"POWER": "ON"} # Exemplo de resposta real
+        mock_get.return_value = mock_response
+
+        # Execução
+        tempo_minutos = 70
+        resultado = self.service.ligar_com_timer(self.ip_address, tempo_minutos)
+
+        # Verificações
+        self.assertTrue(resultado)
+        mock_get.assert_called_once()
+        delay_value = tempo_minutos * 60 * 10
+        comando = f"Backlog Power ON; Delay {delay_value}; Power OFF"
+        url_esperada = f"http://{self.ip_address}/cm?cmnd={quote(comando)}"
+        self.assertEqual(mock_get.call_args[0][0], url_esperada)
+
+    @patch('laundry.services.requests.get')
+    def test_ligar_com_timer_falha_de_rede(self, mock_get):
+        """
+        Testa o cenário de falha de rede (timeout).
+        """
+        # Configuração do Mock para simular uma exceção de rede
+        mock_get.side_effect = requests.exceptions.Timeout("Simulando timeout")
+
+        # Execução
+        resultado = self.service.ligar_com_timer(self.ip_address, 70)
+
+        # Verificação
+        self.assertFalse(resultado)
+
+    # --- Testes para verificar_status_dispositivo ---
+
+    @patch('laundry.services.requests.get')
+    def test_verificar_status_dispositivo_on(self, mock_get):
+        """
+        Testa a verificação de status quando o dispositivo está ON.
+        """
+        # Configuração do Mock
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"StatusSTS": {"POWER": "ON"}}
+        mock_get.return_value = mock_response
+
+        # Execução
+        status = self.service.verificar_status_dispositivo(self.ip_address)
+
+        # Verificações
+        self.assertEqual(status, "ON")
+        url_esperada = f"http://{self.ip_address}/cm"
+        mock_get.assert_called_once_with(url_esperada, params={'cmnd': 'Status 0'}, timeout=5)
+
+    @patch('laundry.services.requests.get')
+    def test_verificar_status_dispositivo_off(self, mock_get):
+        """
+        Testa a verificação de status quando o dispositivo está OFF.
+        """
+        # Configuração do Mock
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"StatusSTS": {"POWER": "OFF"}}
+        mock_get.return_value = mock_response
+
+        # Execução
+        status = self.service.verificar_status_dispositivo(self.ip_address)
+
+        # Verificação
+        self.assertEqual(status, "OFF")
+
+    @patch('laundry.services.requests.get')
+    def test_verificar_status_dispositivo_falha_comunicacao(self, mock_get):
+        """
+        Testa a verificação de status em caso de falha de rede.
+        """
+        # Configuração do Mock
+        mock_get.side_effect = requests.exceptions.RequestException("Erro de rede")
+
+        # Execução
+        status = self.service.verificar_status_dispositivo(self.ip_address)
+
+        # Verificação
+        self.assertEqual(status, "ERRO")
+
+    @patch('laundry.services.requests.get')
+    def test_verificar_status_dispositivo_resposta_inesperada(self, mock_get):
+        """
+        Testa a verificação de status quando a resposta do dispositivo é inesperada.
+        """
+        # Configuração do Mock
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"StatusFoo": {"BAR": "BAZ"}} # Estrutura inválida
+        mock_get.return_value = mock_response
+
+        # Execução
+        status = self.service.verificar_status_dispositivo(self.ip_address)
+
+        # Verificação
+        self.assertEqual(status, "ERRO")

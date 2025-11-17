@@ -1,43 +1,47 @@
-
 from django.db import models
-
-class Maquina(models.Model):
-    class TipoMaquina(models.TextChoices):
-        LAVADORA = 'LAVADORA', 'Lavadora'
-        SECADORA = 'SECADORA', 'Secadora'
-
-    class StatusMaquina(models.TextChoices):
-        DISPONIVEL = 'DISPONIVEL', 'Disponível'
-        EM_USO = 'EM_USO', 'Em Uso'
-        MANUTENCAO = 'MANUTENCAO', 'Manutenção'
-
-    nome = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=10, choices=TipoMaquina.choices)
-    ip_tomada = models.GenericIPAddressField()
-    device_id = models.CharField(max_length=100)
-    local_key = models.CharField(max_length=100)
-    status = models.CharField(max_length=10, choices=StatusMaquina.choices, default=StatusMaquina.DISPONIVEL)
-    tempo_ciclo_minutos = models.PositiveIntegerField(
-        default=70,
-        help_text="Tempo de duração do ciclo em minutos. Este valor será usado para programar o timer do dispositivo Tasmota."
-    )
-
-    def __str__(self):
-        return f"{self.nome} ({self.get_tipo_display()})"
+from django.contrib.auth.hashers import make_password, check_password
 
 class Inquilino(models.Model):
-    identificador = models.CharField(max_length=50, unique=True)
-    nome_responsavel = models.CharField(max_length=200, blank=True, null=True)
-    creditos = models.IntegerField(default=0)
+    apartamento = models.CharField(max_length=10, unique=True)
+    password = models.CharField(max_length=128, null=True, blank=True) # Hashed password
+    creditos = models.IntegerField(default=10)
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        if not self.password:
+            return False
+        return check_password(raw_password, self.password)
 
     def __str__(self):
-        return self.identificador
+        return f"Inquilino do Apto {self.apartamento}"
+
+class Maquina(models.Model):
+    class StatusMaquina(models.TextChoices):
+        DISPONIVEL = 'Disponível'
+        EM_USO = 'Em Uso'
+        MANUTENCAO = 'Manutenção'
+
+    nome = models.CharField(max_length=50)
+    ip_address = models.GenericIPAddressField(unique=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusMaquina.choices,
+        default=StatusMaquina.DISPONIVEL
+    )
+    tempo_minutos = models.IntegerField(default=30, help_text="Tempo do ciclo em minutos")
+    custo_creditos = models.IntegerField(default=1)
+
+    def __str__(self):
+        return self.nome
 
 class HistoricoUso(models.Model):
-    inquilino = models.ForeignKey(Inquilino, on_delete=models.CASCADE, related_name='usos')
-    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='historico')
+    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE)
+    inquilino = models.ForeignKey(Inquilino, on_delete=models.CASCADE)
     data_hora_inicio = models.DateTimeField(auto_now_add=True)
     data_hora_fim = models.DateTimeField(null=True, blank=True)
+    custo_creditos = models.IntegerField()
 
     def __str__(self):
-        return f"Uso por {self.inquilino} em {self.data_hora_inicio.strftime('%d/%m/%Y %H:%M')}"
+        return f"{self.maquina.nome} - {self.inquilino.apartamento} em {self.data_hora_inicio}"
