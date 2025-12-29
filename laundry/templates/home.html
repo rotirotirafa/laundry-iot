@@ -4,9 +4,13 @@
 
 {% block content %}
 <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
-    <span>Bem-vindo, <strong>{{ inquilino.identificador }}</strong>!</span>
-    <span class="badge bg-primary rounded-pill">Você tem {{ inquilino.creditos }} crédito(s)</span>
+    <span>Bem-vindo, <strong>{{ inquilino.apartamento }}</strong>!</span>
+    <span class="badge bg-primary rounded-pill">Você tem {{ creditos_disponiveis }} crédito(s)</span>
 </div>
+
+{% if creditos_disponiveis <= 0 %}
+    <div class="alert alert-warning mt-3">Você não tem créditos disponíveis no momento. Não é possível iniciar máquinas.</div>
+{% endif %}
 
 <h2 class="mb-4">Máquinas Disponíveis</h2>
 
@@ -22,20 +26,24 @@
                 <h5 class="card-title mb-0">{{ maquina.nome }}</h5>
             </div>
             <div class="card-body">
-                <p class="card-text"><strong>Tipo:</strong> {{ maquina.get_tipo_display }}</p>
+                {# Tipo removido; show ip & tempo instead #}
+                <p class="card-text"><strong>IP:</strong> {{ maquina.ip_address }}</p>
+                <p class="card-text"><strong>Tempo (min):</strong> {{ maquina.tempo_minutos }}</p>
                 <p class="card-text">
                     <strong>Status:</strong>
-                    {% if maquina.status == 'DISPONIVEL' %}
+                    {% if maquina.status == 'Disponível' %}
                         <span class="badge bg-success">Disponível</span>
-                    {% elif maquina.status == 'EM_USO' %}
+                    {% elif maquina.status == 'Em Uso' %}
                         <span class="badge bg-warning">Em Uso</span>
                     {% else %}
                         <span class="badge bg-secondary">Em Manutenção</span>
                     {% endif %}
                 </p>
 
-                {% if maquina.status == 'DISPONIVEL' and inquilino.creditos > 0 %}
-<a href="{% url 'laundry:usar_maquina' id_maquina=maquina.id identificador_inquilino=inquilino.identificador %}" class="btn btn-success">Usar</a>
+                {% if maquina.status == 'DISPONIVEL' and inquilino.creditos >= maquina.custo_creditos %}
+                    <a href="{% url 'laundry:usar_maquina' maquina_id=maquina.id %}" class="btn btn-success">Usar</a>
+                {% elif maquina.status == 'DISPONIVEL' and inquilino.creditos < maquina.custo_creditos %}
+                    <button class="btn btn-secondary" disabled>Créditos insuficientes</button>
                 {% endif %}
             </div>
         </div>

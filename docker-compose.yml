@@ -20,16 +20,30 @@ services:
       timeout: 5s
       retries: 5
 
-  laundry-iot:
+  # laundry-iot:
+  #   build: .
+  #   container_name: laundry_iot_app
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     DATABASE_URL: "postgresql://user:IJmUjBt4@postgres:5432/laundry_db"
+  #   networks:
+  #     - laundry_network
+  web:
     build: .
     container_name: laundry_iot_app
     ports:
       - "8000:8000"
+    env_file: .env
+    environment:
+      # override host to point to the postgres service inside compose network
+      DB_HOST: postgres
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      DATABASE_URL: "postgresql://user:password@postgres:5432/laundry_db"
     networks:
       - laundry_network
 

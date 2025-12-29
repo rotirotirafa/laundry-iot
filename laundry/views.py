@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Inquilino, Maquina, HistoricoUso
 from .services import TasmotaService
+from django.contrib.auth.hashers import identify_hasher
 
 def landing_page_view(request):
     return render(request, 'landing.html')
@@ -20,7 +21,7 @@ def login_view(request):
 
         try:
             inquilino = Inquilino.objects.get(apartamento=apto)
-            
+            # If no password stored, set one (first access)
             if not inquilino.password:
                 inquilino.set_password(raw_password)
                 inquilino.save()
@@ -28,12 +29,28 @@ def login_view(request):
                 request.session['inquilino_id'] = inquilino.id
                 return redirect('laundry:home')
 
+            # If stored password is a proper hashed value, use check_password
             if inquilino.check_password(raw_password):
                 request.session['inquilino_id'] = inquilino.id
                 return redirect('laundry:home')
-            else:
-                messages.error(request, 'Apartamento ou senha inválidos.')
-                return redirect('laundry:login')
+
+            # If stored value is not a recognized hashed password (maybe raw/plaintext),
+            # accept it if it matches the provided raw password and then hash it for future logins.
+            hashed_ok = True
+            try:
+                identify_hasher(inquilino.password)
+            except Exception:
+                hashed_ok = False
+
+            if not hashed_ok and inquilino.password == raw_password:
+                inquilino.set_password(raw_password)
+                inquilino.save()
+                messages.success(request, 'Senha atualizada automaticamente. Agora você está logado.')
+                request.session['inquilino_id'] = inquilino.id
+                return redirect('laundry:home')
+
+            messages.error(request, 'Apartamento ou senha inválidos.')
+            return redirect('laundry:login')
 
         except Inquilino.DoesNotExist:
             messages.error(request, 'Apartamento não encontrado.')
@@ -56,7 +73,8 @@ def home_view(request):
 
     context = {
         'inquilino': get_object_or_404(Inquilino, pk=inquilino_id),
-        'maquinas': maquinas_list
+        'maquinas': maquinas_list,
+        'creditos_disponiveis': max(0, get_object_or_404(Inquilino, pk=inquilino_id).creditos),
     }
     return render(request, 'home.html')
 
@@ -128,7 +146,9 @@ def sucesso_view(request):
     if not inquilino_id:
         return redirect('laundry:login')
     
+    inquilino = get_object_or_404(Inquilino, pk=inquilino_id)
     context = {
-        'inquilino': get_object_or_404(Inquilino, pk=inquilino_id)
+        'inquilino': inquilino,
+        'creditos': inquilino.creditos,
     }
     return render(request, 'sucesso.html', context)
