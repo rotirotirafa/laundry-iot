@@ -64,6 +64,10 @@ def home_view(request):
         return redirect('laundry:login')
     
     maquinas_list = Maquina.objects.all().order_by('nome')
+    
+    # Nota: A liberação automática de máquinas é feita pelo scheduler do django-q
+    # (tarefa 'liberar_maquinas_expiradas' executada a cada 2 minutos).
+    # Esta verificação serve como fallback caso o scheduler não esteja rodando.
     for maquina in maquinas_list:
         if maquina.status == Maquina.StatusMaquina.EM_USO:
             ultimo_uso = maquina.historicouso_set.order_by('-data_hora_fim').first()

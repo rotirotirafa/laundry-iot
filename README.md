@@ -77,7 +77,33 @@ python manage.py createsuperuser
 
 Siga as instruções para criar um usuário administrador que terá acesso ao painel admin do Django.
 
-### 8. Rodar o servidor de desenvolvimento
+### 8. Configurar migrações do django-q
+
+```bash
+python manage.py migrate django_q
+```
+
+### 9. Configurar o scheduler para liberação automática
+
+```bash
+python manage.py setup_scheduler
+```
+
+Este comando configura uma tarefa periódica que libera automaticamente as máquinas quando o tempo de ciclo expira.
+
+### 10. Iniciar o qcluster (scheduler)
+
+Em um terminal separado, inicie o qcluster:
+
+```bash
+python manage.py qcluster
+```
+
+**Importante:** O qcluster deve estar rodando para que a liberação automática funcione. Em produção, configure o qcluster como um serviço (systemd, supervisor, etc.).
+
+### 11. Rodar o servidor de desenvolvimento
+
+Em outro terminal, inicie o servidor:
 
 ```bash
 python manage.py runserver
@@ -103,6 +129,7 @@ O sistema estará disponível em `http://127.0.0.1:8000/`
    - Marca a máquina como "Em Uso"
    - Registra o uso no histórico
 4. **Desligamento Automático:** O Tasmota desliga automaticamente após o tempo configurado, mesmo se houver falha de rede (graças ao recurso `PulseTime`)
+5. **Liberação Automática:** O scheduler do django-q verifica periodicamente (a cada 2 minutos) se alguma máquina em uso já completou seu ciclo e a libera automaticamente no sistema
 
 ### Componentes Principais
 
@@ -122,6 +149,17 @@ O sistema se comunica com as tomadas Sonoff/Tasmota via requisições HTTP GET:
 - **Verificar status:** `GET http://{ip}/cm?cmnd=Power`
 
 O `PulseTime` é calculado como: `(tempo_em_minutos * 60) + 100` segundos. Isso garante que a máquina desligue automaticamente mesmo em caso de falha de rede.
+
+### Liberação Automática de Máquinas
+
+O sistema possui um scheduler automático que verifica e libera máquinas quando o tempo de ciclo expira:
+
+- **Frequência:** A tarefa é executada a cada 2 minutos pelo django-q
+- **Funcionamento:** O scheduler verifica todas as máquinas com status "Em Uso" e compara o `data_hora_fim` do último uso com o horário atual
+- **Liberação:** Quando o tempo expira, a máquina é automaticamente marcada como "Disponível" no sistema
+- **Fallback:** A view `home_view` também verifica e libera máquinas como medida de segurança caso o scheduler não esteja rodando
+
+**Importante:** Para que a liberação automática funcione, o qcluster deve estar rodando. Sem ele, as máquinas só serão liberadas quando alguém acessar a página home.
 
 ## 🔧 Comandos Úteis
 
@@ -143,6 +181,26 @@ Use o painel admin do Django para:
 - Criar inquilinos (apartamentos)
 - Cadastrar máquinas com seus IPs
 - Atribuir créditos aos inquilinos
+
+### Gerenciar o Scheduler
+
+**Verificar tarefas agendadas:**
+```bash
+python manage.py shell
+>>> from django_q.models import Schedule
+>>> Schedule.objects.all()
+```
+
+**Reconfigurar o scheduler:**
+```bash
+python manage.py setup_scheduler
+```
+
+**Parar o qcluster:**
+Pressione `Ctrl+C` no terminal onde o qcluster está rodando, ou envie um sinal de término ao processo.
+
+**Em produção:**
+Configure o qcluster como serviço usando systemd ou supervisor para garantir que ele sempre esteja rodando.
 
 ## 📝 Estrutura do Projeto
 
