@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Bem-vindo à Lavanderia IoT{% endblock %}
+{% block title %}Bem-vindo à Lavanderia{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-8 offset-md-2 text-center">
-            <h1 class="display-4">Bem-vindo ao Sistema de Lavanderia IoT</h1>
-            <p class="lead">Controle as máquinas de lavar de forma inteligente e eficiente.</p>
+            <div class="mb-4">
+                {# Espaço reservado para o logo #}
+                <div class="logo-placeholder" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                    {# Logo será inserido aqui #}
+                </div>
+            </div>
             <hr class="my-4">
             <p>Para começar, faça o login com seu identificador de inquilino.</p>
             <a class="btn btn-primary btn-lg" href="{% url 'laundry:login' %}" role="button">

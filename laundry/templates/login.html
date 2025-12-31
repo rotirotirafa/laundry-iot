@@ -1,29 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login Lavanderia</h1>
+{% extends 'base.html' %}
 
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li style="color: red;">{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+{% block title %}Login - Lavanderia{% endblock %}
 
-    <form method="post">
-        {% csrf_token %}
-        <label for="apartamento">Número do Apartamento:</label><br>
-        <input type="text" id="apartamento" name="apartamento" required><br><br>
-        
-        <label for="password">Senha:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
-        
-        <input type="submit" value="Entrar">
-    </form>
-    <p><small>Se este é seu primeiro acesso, ou se você esqueceu sua senha, digite uma nova senha. Ela será salva para futuros acessos.</small></p>
-</body>
-</html>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0 text-center">Login Lavanderia</h3>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="apartamento" class="form-label">Número do Apartamento:</label>
+                        <input type="text" class="form-control" id="apartamento" name="apartamento" required autofocus>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha:</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                    </div>
+                </form>
+                
+                <p class="text-muted small mt-3 mb-0">
+                    <small>Caso esqueça a senha, contate o administrador do condomínio.</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

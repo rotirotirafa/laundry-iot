@@ -19,8 +19,11 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#">Lavanderia IoT</a>
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" href="#">Lavanderia</a>
+            {% if request.session.inquilino_id %}
+                <a href="{% url 'laundry:logout' %}" class="btn btn-outline-light btn-sm">Sair</a>
+            {% endif %}
         </div>
     </nav>
 

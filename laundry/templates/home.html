@@ -40,9 +40,9 @@
                     {% endif %}
                 </p>
 
-                {% if maquina.status == 'DISPONIVEL' and inquilino.creditos >= maquina.custo_creditos %}
+                {% if maquina.status == 'Disponível' and inquilino.creditos >= maquina.custo_creditos %}
                     <a href="{% url 'laundry:usar_maquina' maquina_id=maquina.id %}" class="btn btn-success">Usar</a>
-                {% elif maquina.status == 'DISPONIVEL' and inquilino.creditos < maquina.custo_creditos %}
+                {% elif maquina.status == 'Disponível' and inquilino.creditos < maquina.custo_creditos %}
                     <button class="btn btn-secondary" disabled>Créditos insuficientes</button>
                 {% endif %}
             </div>

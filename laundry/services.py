@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 class TasmotaService:
     def ligar_com_timer(self, ip_address: str, tempo_minutos: int) -> bool:
         """
-        Envia um comando 'Backlog' para ligar o dispositivo e agendar o desligamento.
+        Envia um comando 'Backlog' para ligar o dispositivo usando PulseTime.
+        O PulseTime garante desligamento automático mesmo em caso de falha de rede.
         Retorna True se o comando foi aceito pelo dispositivo, False caso contrário.
         """
         if not isinstance(tempo_minutos, int) or tempo_minutos <= 0:
@@ -15,14 +16,16 @@ class TasmotaService:
             return False
 
         try:
-            # O Delay do Tasmota é em décimos de segundo. 1 minuto = 600 décimos.
-            delay_value = tempo_minutos * 60 * 10 
-            comando = f"Backlog Power ON; Delay {delay_value}; Power OFF"
+            # PulseTime é calculado como: tempo em segundos + 100 (offset padrão do Tasmota)
+            # Exemplo: 60 minutos = 3600s + 100 = 3700
+            tempo_segundos = tempo_minutos * 60
+            pulse_time_value = tempo_segundos + 100
+            comando = f"Backlog PulseTime {pulse_time_value}; Power On"
             url_comando = quote(comando)
             url = f"http://{ip_address}/cm?cmnd={url_comando}"
 
             logger.info(f"Enviando para {ip_address}: {comando}")
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=5)
 
             if response.ok:
                 logger.info(f"Comando aceito por {ip_address}. Resposta: {response.text}")

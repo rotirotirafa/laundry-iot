@@ -22,12 +22,13 @@ class TasmotaServiceTest(TestCase):
     def test_ligar_com_timer_sucesso(self, mock_get):
         """
         Testa o caminho feliz: a comunicação é bem-sucedida e o dispositivo
-        retorna a resposta esperada.
+        retorna a resposta esperada usando PulseTime.
         """
         # Configuração do Mock para simular uma resposta HTTP bem-sucedida
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"POWER": "ON"} # Exemplo de resposta real
+        mock_response.ok = True
+        mock_response.text = '{"POWER":"ON"}'
         mock_get.return_value = mock_response
 
         # Execução
@@ -37,10 +38,14 @@ class TasmotaServiceTest(TestCase):
         # Verificações
         self.assertTrue(resultado)
         mock_get.assert_called_once()
-        delay_value = tempo_minutos * 60 * 10
-        comando = f"Backlog Power ON; Delay {delay_value}; Power OFF"
+        # PulseTime = (tempo_minutos * 60) + 100
+        tempo_segundos = tempo_minutos * 60
+        pulse_time_value = tempo_segundos + 100
+        comando = f"Backlog PulseTime {pulse_time_value}; Power On"
         url_esperada = f"http://{self.ip_address}/cm?cmnd={quote(comando)}"
         self.assertEqual(mock_get.call_args[0][0], url_esperada)
+        # Verificar que o timeout é 5 segundos
+        self.assertEqual(mock_get.call_args[1]['timeout'], 5)
 
     @patch('laundry.services.requests.get')
     def test_ligar_com_timer_falha_de_rede(self, mock_get):

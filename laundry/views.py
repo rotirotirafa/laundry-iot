@@ -76,7 +76,7 @@ def home_view(request):
         'maquinas': maquinas_list,
         'creditos_disponiveis': max(0, get_object_or_404(Inquilino, pk=inquilino_id).creditos),
     }
-    return render(request, 'home.html')
+    return render(request, 'home.html', context)
 
 def usar_maquina_view(request, maquina_id):
     inquilino_id = request.session.get('inquilino_id')
@@ -152,3 +152,9 @@ def sucesso_view(request):
         'creditos': inquilino.creditos,
     }
     return render(request, 'sucesso.html', context)
+
+def logout_view(request):
+    """Realiza logout do usuário, limpando a sessão e redirecionando para a landing page."""
+    request.session.flush()
+    messages.success(request, 'Você saiu com sucesso!')
+    return redirect('laundry:landing_page')
