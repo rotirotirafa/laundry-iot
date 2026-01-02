@@ -60,9 +60,9 @@ DB_PORT=5432
 Se estiver usando Docker Compose, você pode criar um arquivo `.env` com variáveis opcionais para o superuser:
 
 ```env
-DJANGO_SUPERUSER_USERNAME=renato
+DJANGO_SUPERUSER_USERNAME=user
 DJANGO_SUPERUSER_PASSWORD=123456
-DJANGO_SUPERUSER_EMAIL=renato@example.com
+DJANGO_SUPERUSER_EMAIL=user@example.com
 ```
 
 Se não fornecer essas variáveis, será criado um superuser padrão:
