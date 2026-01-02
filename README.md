@@ -50,7 +50,7 @@ Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 ```env
 DB_NAME=laundry_db
 DB_USER=user
-DB_PASS=IJmUjBt4
+DB_PASS=senha
 DB_HOST=localhost
 DB_PORT=5432
 ```
