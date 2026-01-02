@@ -86,9 +86,9 @@ O Docker Compose configura automaticamente todo o ambiente, incluindo:
 Para usar com superuser personalizado, crie um arquivo `.env` na raiz do projeto:
 
 ```env
-DJANGO_SUPERUSER_USERNAME=renato
+DJANGO_SUPERUSER_USERNAME=user
 DJANGO_SUPERUSER_PASSWORD=123456
-DJANGO_SUPERUSER_EMAIL=renato@example.com
+DJANGO_SUPERUSER_EMAIL=user@example.com
 ```
 
 Depois, suba todos os serviços:
