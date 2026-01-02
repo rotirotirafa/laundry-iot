@@ -43,6 +43,8 @@ pip install -r requirements.txt
 
 ### 4. Configurar variáveis de ambiente
 
+**Para desenvolvimento local (sem Docker Compose):**
+
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ```env
@@ -53,15 +55,67 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-**Nota:** Se estiver usando Docker Compose, o `DB_HOST` deve ser `localhost` quando rodando localmente, ou `postgres` se estiver dentro de um container Docker.
+**Para Docker Compose:**
 
-### 5. Subir o banco de dados com Docker
+Se estiver usando Docker Compose, você pode criar um arquivo `.env` com variáveis opcionais para o superuser:
+
+```env
+DJANGO_SUPERUSER_USERNAME=renato
+DJANGO_SUPERUSER_PASSWORD=123456
+DJANGO_SUPERUSER_EMAIL=renato@example.com
+```
+
+Se não fornecer essas variáveis, será criado um superuser padrão:
+- Username: `admin`
+- Password: `admin123`
+- Email: `admin@example.com`
+
+**Nota:** As configurações de banco de dados no Docker Compose já estão definidas no `docker-compose.yml`. O `DB_HOST` dentro do container é `postgres` (nome do serviço).
+
+### 5. Subir o ambiente com Docker Compose
+
+**Opção A: Usando Docker Compose (Recomendado)**
+
+O Docker Compose configura automaticamente todo o ambiente, incluindo:
+- Banco de dados PostgreSQL
+- Aplicação Django
+- Migrações automáticas
+- Criação de superuser (se configurado)
+- Configuração do scheduler
+
+Para usar com superuser personalizado, crie um arquivo `.env` na raiz do projeto:
+
+```env
+DJANGO_SUPERUSER_USERNAME=renato
+DJANGO_SUPERUSER_PASSWORD=123456
+DJANGO_SUPERUSER_EMAIL=renato@example.com
+```
+
+Depois, suba todos os serviços:
+
+```bash
+docker-compose up -d
+```
+
+O sistema estará disponível em `http://localhost:8000/`
+
+**O que acontece automaticamente ao subir o Docker Compose:**
+- ✅ Aguarda o banco de dados estar pronto
+- ✅ Executa todas as migrações do Django
+- ✅ Configura as migrações do django-q
+- ✅ Configura o scheduler para liberação automática de máquinas
+- ✅ Cria o superuser (se as variáveis estiverem definidas)
+- ✅ Inicia o servidor Django na porta 8000
+
+**Opção B: Apenas o banco de dados**
+
+Se preferir rodar a aplicação localmente e apenas usar Docker para o banco:
 
 ```bash
 docker-compose up -d postgres
 ```
 
-Isso irá iniciar o container PostgreSQL na porta 5432.
+Isso irá iniciar apenas o container PostgreSQL na porta 5432.
 
 ### 6. Executar migrações
 

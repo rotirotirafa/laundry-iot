@@ -23,7 +23,40 @@ PYCODE
   sleep 2
 done
 
-# Run migrations and start server
+echo "Database is ready!"
+
+# Run migrations
+echo "Running migrations..."
 python manage.py migrate --noinput
+
+# Migrate django-q tables
+echo "Setting up django-q..."
+python manage.py migrate django_q --noinput || true
+
+# Setup scheduler
+echo "Configuring scheduler..."
+python manage.py setup_scheduler || true
+
+# Create superuser if variables are provided
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+  echo "Creating superuser..."
+  python manage.py shell <<PYEOF
+import os
+from django.contrib.auth import get_user_model
+User = get_user_model()
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username=username, email=email, password=password)
+    print(f"Superuser '{username}' created successfully!")
+else:
+    print(f"Superuser '{username}' already exists.")
+PYEOF
+fi
+
+# Collect static files (if needed)
 python manage.py collectstatic --noinput || true
+
+echo "Starting server..."
 exec python manage.py runserver 0.0.0.0:8000

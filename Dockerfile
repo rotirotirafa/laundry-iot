@@ -16,9 +16,11 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . /app/
 
+# Make entrypoint executable before switching user
+RUN chmod +x /app/entrypoint.sh
+
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
-RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 

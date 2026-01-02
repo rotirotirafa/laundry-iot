@@ -18,32 +18,28 @@ services:
       timeout: 5s
       retries: 5
 
-  # laundry-iot:
-  #   build: .
-  #   container_name: laundry_iot_app
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     DATABASE_URL: "postgresql://user:IJmUjBt4@postgres:5432/laundry_db"
-  #   networks:
-  #     - laundry_network
-  #web:
-  #  build: .
-  #  container_name: laundry_iot_app
-  #  ports:
-  #    - "8000:8000"
-  #  env_file: .env
-  #  environment:
-  #    # override host to point to the postgres service inside compose network
-  #    DB_HOST: postgres
-  #  depends_on:
-  #    postgres:
-  #      condition: service_healthy
-  #  networks:
-  #    - laundry_network
+  laundry-iot:
+    build: .
+    container_name: laundry_iot_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      DB_NAME: laundry_db
+      DB_USER: user
+      DB_PASS: IJmUjBt4
+      DB_HOST: postgres
+      DB_PORT: 5432
+      # Django superuser configuration (opcional)
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+    networks:
+      - laundry_network
+    restart: unless-stopped
 
 networks:
   laundry_network:
