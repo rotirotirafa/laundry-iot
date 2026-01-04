@@ -145,3 +145,10 @@ Q_CLUSTER = {
     'orm': 'default',  # Usa o banco de dados como broker (ORM)
     'catch_up': False,  # Não executa tarefas perdidas quando o scheduler está offline
 }
+
+# Tempo de vida da sessão em segundos (60 segundos = 1 minuto)
+SESSION_COOKIE_AGE = 60
+
+# Renova o tempo a cada requisição (clique/carregamento de página)
+# Se o usuário continuar usando, ele ganha mais 1 minuto.
+SESSION_SAVE_EVERY_REQUEST = True

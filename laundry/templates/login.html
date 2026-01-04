@@ -1,13 +1,19 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login - Lavanderia{% endblock %}
+{% block title %}Login - Cond&Lav{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    
+    <div class="col-md-5 col-lg-4 text-center mb-4 mb-md-0">
+        <img src="{% static 'img/logo.png' %}" alt="Logo Cond&Lav" class="img-fluid" style="max-height: 250px;">
+    </div>
+
     <div class="col-md-6 col-lg-4">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h3 class="card-title mb-0 text-center">Login Lavanderia</h3>
+                <h3 class="card-title mb-0 text-center">Login</h3>
             </div>
             <div class="card-body">
                 {% if messages %}
@@ -36,8 +42,8 @@
                     </div>
                 </form>
                 
-                <p class="text-muted small mt-3 mb-0">
-                    <small>Caso esqueça a senha, contate o administrador do condomínio.</small>
+                <p class="text-muted small mt-3 mb-0 text-center">
+                    <small>Caso não consiga fazer login, contate o administrador do sistema.</small>
                 </p>
             </div>
         </div>
