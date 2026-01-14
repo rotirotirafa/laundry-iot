@@ -39,7 +39,7 @@ services:
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
     networks:
       - laundry_network
-    restart: unless-stopped
+    restart: always
 
 networks:
   laundry_network:
