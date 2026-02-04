@@ -129,3 +129,65 @@ class TasmotaServiceTest(TestCase):
 
         # Verificação
         self.assertEqual(status, "ERRO")
+
+    # --- Testes para ligar ---
+
+    @patch('laundry.services.requests.get')
+    def test_ligar_sucesso(self, mock_get):
+        """
+        Testa o ligar com sucesso.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.ok = True
+        mock_response.text = '{"POWER":"ON"}'
+        mock_get.return_value = mock_response
+
+        resultado = self.service.ligar(self.ip_address)
+
+        self.assertTrue(resultado)
+        comando = "Power On"
+        url_esperada = f"http://{self.ip_address}/cm?cmnd={quote(comando)}"
+        mock_get.assert_called_once_with(url_esperada, timeout=5)
+
+    @patch('laundry.services.requests.get')
+    def test_ligar_falha_rede(self, mock_get):
+        """
+        Testa o ligar com falha de rede.
+        """
+        mock_get.side_effect = requests.exceptions.Timeout("Timeout")
+
+        resultado = self.service.ligar(self.ip_address)
+
+        self.assertFalse(resultado)
+
+    # --- Testes para desligar ---
+
+    @patch('laundry.services.requests.get')
+    def test_desligar_sucesso(self, mock_get):
+        """
+        Testa o desligar com sucesso.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.ok = True
+        mock_response.text = '{"POWER":"OFF"}'
+        mock_get.return_value = mock_response
+
+        resultado = self.service.desligar(self.ip_address)
+
+        self.assertTrue(resultado)
+        comando = "Power Off"
+        url_esperada = f"http://{self.ip_address}/cm?cmnd={quote(comando)}"
+        mock_get.assert_called_once_with(url_esperada, timeout=5)
+
+    @patch('laundry.services.requests.get')
+    def test_desligar_falha_rede(self, mock_get):
+        """
+        Testa o desligar com falha de rede.
+        """
+        mock_get.side_effect = requests.exceptions.RequestException("Erro")
+
+        resultado = self.service.desligar(self.ip_address)
+
+        self.assertFalse(resultado)

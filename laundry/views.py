@@ -162,3 +162,34 @@ def logout_view(request):
     request.session.flush()
     messages.success(request, 'Você saiu com sucesso!')
     return redirect('laundry:landing_page')
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.urls import reverse
+
+@staff_member_required
+def controle_maquina_view(request, maquina_id, acao):
+    maquina = get_object_or_404(Maquina, pk=maquina_id)
+    tasmota_service = TasmotaService()
+    
+    if acao == 'ligar':
+        success = tasmota_service.ligar(maquina.ip_address)
+        if success:
+            messages.success(request, f'Comando para ligar a máquina {maquina.nome} enviado com sucesso.')
+        else:
+            messages.error(request, f'Falha ao enviar comando para ligar a máquina {maquina.nome}.')
+            
+    elif acao == 'desligar':
+        success = tasmota_service.desligar(maquina.ip_address)
+        if success:
+            messages.success(request, f'Comando para desligar a máquina {maquina.nome} enviado com sucesso.')
+        else:
+            messages.error(request, f'Falha ao enviar comando para desligar a máquina {maquina.nome}.')
+
+    elif acao == 'alternar':
+        success = tasmota_service.alternar(maquina.ip_address)
+        if success:
+            messages.success(request, f'Comando para alternar o estado da máquina {maquina.nome} enviado com sucesso.')
+        else:
+            messages.error(request, f'Falha ao enviar comando para alternar o estado da máquina {maquina.nome}.')
+
+    return redirect(reverse('admin:laundry_maquina_changelist'))
