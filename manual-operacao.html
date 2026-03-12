@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laundry IoT — Manual de Operação</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a2e;
+      background: #fff;
+      padding: 40px 50px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Capa ── */
+    .capa {
+      text-align: center;
+      padding: 60px 0 50px;
+      border-bottom: 3px solid #0d6efd;
+      margin-bottom: 40px;
+    }
+    .capa .badge {
+      display: inline-block;
+      background: #0d6efd;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .capa h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0d6efd;
+      margin-bottom: 8px;
+    }
+    .capa h2 {
+      font-size: 16px;
+      font-weight: 400;
+      color: #555;
+      margin-bottom: 24px;
+    }
+    .capa .meta {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* ── Seções ── */
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0d6efd;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 36px 0 14px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e0e8ff;
+    }
+
+    p {
+      line-height: 1.7;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    /* ── Alertas ── */
+    .info {
+      background: #e8f0fe;
+      border-left: 4px solid #0d6efd;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 12.5px;
+      color: #1a1a2e;
+    }
+    .aviso {
+      background: #fff8e1;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 12.5px;
+      color: #1a1a2e;
+    }
+
+    /* ── Tabela de comandos ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 12.5px;
+    }
+    thead tr {
+      background: #0d6efd;
+      color: #fff;
+    }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+    tbody tr:nth-child(even) { background: #f4f7ff; }
+    tbody tr:hover { background: #e8f0fe; }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #e4e9f7;
+      vertical-align: top;
+    }
+
+    /* ── Blocos de código ── */
+    .cmd-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12.5px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 10px 0 18px;
+      line-height: 1.8;
+      white-space: pre;
+    }
+    .cmd-block .prompt { color: #89b4fa; user-select: none; }
+    .cmd-block .comment { color: #6c7086; }
+    .cmd-block .ok { color: #a6e3a1; }
+
+    code {
+      background: #e8f0fe;
+      color: #0d6efd;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Passos numerados ── */
+    .steps { counter-reset: step; }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .step-num {
+      counter-increment: step;
+      min-width: 28px;
+      height: 28px;
+      background: #0d6efd;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-body { padding-top: 4px; line-height: 1.7; }
+
+    /* ── Rodapé ── */
+    footer {
+      margin-top: 50px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e8ff;
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { padding: 20px 30px; font-size: 12px; }
+      .capa { padding: 30px 0 30px; }
+      h3 { page-break-after: avoid; }
+      .cmd-block { page-break-inside: avoid; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="capa">
+  <div class="badge">Manual Técnico</div>
+  <h1>Laundry IoT</h1>
+  <h2>Guia de Operação — Sistema de Lavanderia Automatizada</h2>
+  <div class="meta">Versão 1.0 &nbsp;·&nbsp; 2026</div>
+</div>
+
+<!-- VISÃO GERAL -->
+<h3>Visão Geral do Sistema</h3>
+<p>
+  O <strong>Laundry IoT</strong> é uma plataforma web para automação de lavanderias em condomínios.
+  Inquilinos fazem login pelo número do apartamento, utilizam créditos para acionar máquinas de lavar
+  e secar, que são controladas remotamente por tomadas inteligentes <strong>Sonoff</strong> com firmware
+  <strong>Tasmota</strong>.
+</p>
+<div class="info">
+  <strong>Pré-requisito:</strong> Docker e Docker Compose instalados na máquina servidora.
+  Todos os comandos abaixo são executados no terminal, dentro da pasta do projeto.
+</div>
+
+<!-- PRÉ-REQUISITOS -->
+<h3>Requisitos</h3>
+<table>
+  <thead><tr><th>Item</th><th>Versão mínima</th><th>Como verificar</th></tr></thead>
+  <tbody>
+    <tr><td>Docker</td><td>24+</td><td><code>docker --version</code></td></tr>
+    <tr><td>Docker Compose</td><td>2+</td><td><code>docker compose version</code></td></tr>
+    <tr><td>Make</td><td>qualquer</td><td><code>make --version</code></td></tr>
+    <tr><td>curl</td><td>qualquer</td><td><code>curl --version</code></td></tr>
+    <tr><td>python3</td><td>3.8+</td><td><code>python3 --version</code></td></tr>
+  </tbody>
+</table>
+
+<!-- COMO USAR O MAKEFILE -->
+<h3>Como Usar os Comandos (Makefile)</h3>
+<p>
+  Todos os comandos são executados no terminal com o prefixo <code>make</code>,
+  dentro da pasta raiz do projeto. Para ver a lista completa a qualquer momento:
+</p>
+<div class="cmd-block"><span class="prompt">$</span> make</div>
+
+<!-- SISTEMA -->
+<h3>Controle do Sistema</h3>
+<p>Estes comandos iniciam, param ou inspecionam toda a aplicação (banco de dados + servidor web).</p>
+
+<table>
+  <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>make ligar-sistema</code></td>
+      <td>Inicia todos os serviços em segundo plano. A aplicação ficará disponível em <strong>http://localhost:8000</strong></td>
+    </tr>
+    <tr>
+      <td><code>make desligar-sistema</code></td>
+      <td>Para todos os containers. Os dados no banco de dados são preservados.</td>
+    </tr>
+    <tr>
+      <td><code>make reiniciar-sistema</code></td>
+      <td>Reinicia os containers sem apagar dados (útil após mudanças de configuração).</td>
+    </tr>
+    <tr>
+      <td><code>make status-sistema</code></td>
+      <td>Exibe o estado dos containers e os últimos 20 registros de log.</td>
+    </tr>
+    <tr>
+      <td><code>make logs</code></td>
+      <td>Acompanha os logs em tempo real. Pressione <code>Ctrl+C</code> para sair.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Exemplo — subir o sistema pela primeira vez:</strong></p>
+<div class="cmd-block"><span class="prompt">$</span> make ligar-sistema
+Iniciando o sistema...
+<span class="ok">[+] Running 2/2</span>
+ ✔ Container postgres_db       Started
+ ✔ Container laundry_iot_app   Started
+Sistema iniciado. Acesse http://localhost:8000</div>
+
+<!-- MÁQUINAS -->
+<h3>Controle das Máquinas</h3>
+<p>
+  Os comandos de máquina se comunicam diretamente com as tomadas Sonoff via rede local.
+  Todos exigem o parâmetro <code>ip=</code> com o endereço IP da tomada.
+</p>
+
+<div class="aviso">
+  <strong>Atenção:</strong> O computador onde o comando é executado deve estar na mesma rede Wi-Fi
+  que as tomadas Sonoff. Verifique os IPs no painel do roteador ou no admin do sistema.
+</div>
+
+<table>
+  <thead><tr><th>Comando</th><th>Parâmetros</th><th>O que faz</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>make ligar</code></td>
+      <td><code>ip=</code></td>
+      <td>Liga a máquina imediatamente, sem timer.</td>
+    </tr>
+    <tr>
+      <td><code>make desligar</code></td>
+      <td><code>ip=</code></td>
+      <td>Desliga a máquina imediatamente.</td>
+    </tr>
+    <tr>
+      <td><code>make alternar</code></td>
+      <td><code>ip=</code></td>
+      <td>Inverte o estado atual (se ligada, desliga; se desligada, liga).</td>
+    </tr>
+    <tr>
+      <td><code>make status-maquina</code></td>
+      <td><code>ip=</code></td>
+      <td>Consulta e exibe o status atual da tomada (ligada/desligada, tensão, etc.).</td>
+    </tr>
+    <tr>
+      <td><code>make ligar-com-timer</code></td>
+      <td><code>ip=</code> <code>minutos=</code></td>
+      <td>Liga a máquina e programa o desligamento automático após N minutos. Mesmo que o sistema caia, a tomada se desliga sozinha.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Exemplos práticos:</strong></p>
+<div class="cmd-block"><span class="comment"># Ligar a máquina no IP 192.168.1.100</span>
+<span class="prompt">$</span> make ligar ip=192.168.1.100
+Ligando maquina em 192.168.1.100...
+<span class="ok">OK — maquina ligada.</span>
+
+<span class="comment"># Desligar a máquina</span>
+<span class="prompt">$</span> make desligar ip=192.168.1.100
+Desligando maquina em 192.168.1.100...
+<span class="ok">OK — maquina desligada.</span>
+
+<span class="comment"># Ligar por 45 minutos (desliga automaticamente)</span>
+<span class="prompt">$</span> make ligar-com-timer ip=192.168.1.100 minutos=45
+Ligando maquina em 192.168.1.100 por 45 minutos...
+<span class="ok">OK — maquina ligada por 45 min.</span>
+
+<span class="comment"># Ver status atual</span>
+<span class="prompt">$</span> make status-maquina ip=192.168.1.100</div>
+
+<!-- FLUXO NORMAL DE USO -->
+<h3>Fluxo Normal de Operação</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      Acesse a pasta do projeto no terminal:<br>
+      <code>cd /caminho/para/laundry-iot</code>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      Inicie o sistema:<br>
+      <code>make ligar-sistema</code>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      Acesse o painel no navegador: <strong>http://localhost:8000</strong><br>
+      Use o usuário <code>admin</code> (ou o configurado no arquivo <code>.env</code>).
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      Para parar o sistema ao final do dia ou manutenção:<br>
+      <code>make desligar-sistema</code>
+    </div>
+  </div>
+</div>
+
+<!-- SOLUÇÃO DE PROBLEMAS -->
+<h3>Solução de Problemas Comuns</h3>
+<table>
+  <thead><tr><th>Sintoma</th><th>Causa provável</th><th>Solução</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Comando retorna <em>"ERRO — nao foi possivel conectar"</em></td>
+      <td>IP errado ou fora da rede</td>
+      <td>Verifique o IP no roteador e se está na mesma rede Wi-Fi</td>
+    </tr>
+    <tr>
+      <td>Site não abre em localhost:8000</td>
+      <td>Containers parados</td>
+      <td>Execute <code>make ligar-sistema</code> e verifique com <code>make status-sistema</code></td>
+    </tr>
+    <tr>
+      <td>Máquina não desliga após o tempo</td>
+      <td>Tarefa agendada parada</td>
+      <td>Execute <code>make reiniciar-sistema</code></td>
+    </tr>
+    <tr>
+      <td>Erro ao iniciar (<em>port already in use</em>)</td>
+      <td>Porta 8000 em uso</td>
+      <td>Pare o processo que usa a porta ou reinicie o servidor</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- REFERÊNCIA RÁPIDA -->
+<h3>Referência Rápida — Todos os Comandos</h3>
+<div class="cmd-block"><span class="comment">## SISTEMA</span>
+make ligar-sistema                              <span class="comment"># Inicia tudo</span>
+make desligar-sistema                           <span class="comment"># Para tudo</span>
+make reiniciar-sistema                          <span class="comment"># Reinicia</span>
+make status-sistema                             <span class="comment"># Status + logs</span>
+make logs                                       <span class="comment"># Logs ao vivo</span>
+
+<span class="comment">## MÁQUINAS</span>
+make ligar ip=&lt;IP&gt;                              <span class="comment"># Liga</span>
+make desligar ip=&lt;IP&gt;                           <span class="comment"># Desliga</span>
+make alternar ip=&lt;IP&gt;                           <span class="comment"># Alterna</span>
+make status-maquina ip=&lt;IP&gt;                     <span class="comment"># Consulta status</span>
+make ligar-com-timer ip=&lt;IP&gt; minutos=&lt;N&gt;        <span class="comment"># Liga com timer</span>
+
+<span class="comment">## OUTROS</span>
+make migrar                                     <span class="comment"># Aplica migrações no banco</span>
+make testar                                     <span class="comment"># Roda testes automatizados</span></div>
+
+<footer>
+  Laundry IoT &nbsp;·&nbsp; Manual de Operação v1.0 &nbsp;·&nbsp; 2026
+</footer>
+
+</body>
+</html>
